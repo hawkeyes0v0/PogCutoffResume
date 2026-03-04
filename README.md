@@ -19,12 +19,13 @@ ok I think I have the firmware for the cutoff boards finished now. (maybe a bit 
 - 30second timeout if button is not pressed again
 
 # Arrays used to store config values:
-int minimumVoltageArray[5] = {3400, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
+
+int minimumVoltageArray[5] = {3000, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
 
 int resumeVoltageArray[5] = {3600, 3300, 3700, 3900, 4100}; //minimum voltage to resume providing power to the node
 
 int resetTriggerPeriodArray[5] = {7, 0, 14, 28, 3}; //reset trigger period in days. 0 = OFF. aux1 pin output
 
-int maxTempCutoffArrray[5] = {60, 55, 50, 65, 0}; //min internal temp sensor value in Celsius to trigger cutoff. 0 = OFF
+int maxTempCutoffArrray[5] = {60, 65, 50, 70, 0}; //min internal temp sensor value in Celsius to trigger cutoff. 0 = OFF
 
 int IdleResetArray[5] = {0, 30, 60, -600, -1800}; //duration between pin status change on aux2 in seconds. reset positive, cutoff negative. 0 = OFF. aux1 pin output
