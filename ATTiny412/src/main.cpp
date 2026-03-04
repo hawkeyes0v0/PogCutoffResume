@@ -242,7 +242,7 @@ void loop() {
         timeIdle = millis();
       }else{
         if(IdleReset < 0){
-          if(millis() - timeIdle <= (IdleReset * 1000)){
+          if(millis() - timeIdle <= (IdleReset * -1000)){
             pinMode(auxPin1, OUTPUT);
             digitalWrite(auxPin1, LOW);
             delay(500);
