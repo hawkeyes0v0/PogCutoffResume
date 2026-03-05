@@ -24,11 +24,10 @@ int dayCount = 0;
 unsigned long timeIdle;
 unsigned long timeReset;
 
-// volatile bool trigger = false;
 volatile unsigned long lastInteruptTrigger;
 
 int configValuesArray[5] = {0, 0, 0, 0, 0};
-int minimumVoltageArray[5] = {3400, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
+int minimumVoltageArray[5] = {3000, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
 int resumeVoltageArray[5] = {3600, 3300, 3700, 3900, 4100}; //minimum voltage to resume providing power to the node
 int resetTriggerPeriodArray[5] = {7, 0, 14, 28, 3}; //reset trigger period in days. 0 = OFF. aux1 pin output
 int maxTempCutoffArrray[5] = {60, 65, 50, 70, 0}; //min internal temp sensor value in Celsius to trigger cutoff. 0 = OFF
@@ -44,14 +43,11 @@ ISR(RTC_CNT_vect)
 {
   // Clear flag by writing '1' 
   RTC.INTFLAGS = RTC_OVF_bm;
-  // trigger = true ;
 }
 
 void buttonISR() {
-  if(millis() - lastInteruptTrigger >= 300){
-    detachInterrupt(digitalPinToInterrupt(buttonPin));
-  }
-  lastInteruptTrigger = millis();
+  detachInterrupt(digitalPinToInterrupt(buttonPin));
+  pinMode(buttonPin, INPUT_PULLUP);
 }
 
 void setBlink(){
@@ -135,14 +131,14 @@ void configMenu() {
   while(menuOption < configValuesArrayCount && millis() - configStart < 30000){ //exit menu if 30s has passed without a button press or if cycled past the last menu option
     buttonTime = 0;
     buttonPressed = 0;
-    while(buttonPressed == 0 && millis() - configStart < 30000){
+    while(buttonPressed == 0 && millis() - configStart < 30000){  //hold here until button is pressed or 30s passes. 
       if(digitalRead(buttonPin) == false){
         unsigned long buttonStart = millis();
         digitalWrite(LEDPin, LOW);
-        while(digitalRead(buttonPin) == false){}
+        while(digitalRead(buttonPin) == false){}                  //hold while pressed
         digitalWrite(LEDPin, HIGH);
         buttonTime = millis() - buttonStart;
-        if(buttonTime >= 100){
+        if(buttonTime >= 100){                                    //debounce check
           buttonPressed = 1;
         }else{
           buttonTime = 0;
@@ -154,7 +150,7 @@ void configMenu() {
       if(buttonTime < 1000){
         //increment menu option value
         configValuesArray[menuOption]++;
-        if(configValuesArray[menuOption] > 4){configValuesArray[menuOption] = 0;}
+        if(configValuesArray[menuOption] > 4){configValuesArray[menuOption] = 0;} //roll the option back to 1 if past the end of the values
         menuDisplay(menuOption);
       }else{
         if(buttonTime >= 1000 && buttonTime <= 5000){
@@ -178,7 +174,7 @@ void configMenu() {
     maxTempCutoff = maxTempCutoffArrray[0];                       //min internal temp sensor value in Celsius to trigger cutoff. 0 = OFF
     IdleReset = IdleResetArray[0];                                 //duration between pin status change on aux2 in seconds. reset positive, cutoff negative. 0 = OFF. aux1 pin output
 
-  }else{
+  }else{                                                          //write new values to variables using menu selection
     minimumVoltage = minimumVoltageArray[configValuesArray[0]];                        //the target voltage to charge cap bank
     resumeVoltage = resumeVoltageArray[configValuesArray[1]];                         //the target voltage to charge cap bank
     resetTriggerPeriod = resetTriggerPeriodArray[configValuesArray[2]];              //reset trigger period in days. 0 = OFF. aux1 pin output
@@ -198,13 +194,13 @@ void setup() {
   digitalWrite(LEDPin, HIGH);
   pinMode(buttonPin, INPUT_PULLUP);
 
-  setBlink();
+  setBlink();                                                   //set RTC to wake from sleep periodically
 }
 
 void loop() {
   timeIdle = millis();
   timeReset = millis();
-  while(readSupplyVoltage() >= minimumVoltage){
+  while(readSupplyVoltage() >= minimumVoltage){                 //check voltage is above cutoff. can start below resume voltage.
     if(readTemp() <= maxTempCutoff){
       digitalWrite(outEnPin, LOW);
     }else{
@@ -217,15 +213,15 @@ void loop() {
       }
     }
 
-    if(digitalRead(buttonPin) == false){
+    if(digitalRead(buttonPin) == false){                       //enter menu if button is pressed.
       configMenu();
     }
 
-    if(IdleReset != 0){
-      if(digitalRead(sensePin)){
+    if(IdleReset != 0){                                         //check if idle reset is enabled. 
+      if(!digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
         timeIdle = millis();
       }else{
-        if(IdleReset < 0){
+        if(IdleReset < 0){                                     //if the value is negative, reset the board if the pinstate HAS changed.
           if(millis() - timeIdle <= (IdleReset * -1000)){
             digitalWrite(outEnPin, !digitalRead(outEnPin));
             delay(500);
@@ -233,7 +229,7 @@ void loop() {
             timeIdle = millis();
           }
         }else{
-          if(millis() - timeIdle >= (IdleReset * 1000)){
+          if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has NOT changed in the given period.
             digitalWrite(outEnPin, !digitalRead(outEnPin));
             delay(500);
             digitalWrite(outEnPin, !digitalRead(outEnPin));
@@ -244,10 +240,10 @@ void loop() {
     }
 
     if(resetTriggerPeriod != 0){
-      if(millis() - timeReset >= 86400000){ //increments every 24 hours
+      if(millis() - timeReset >= 86400000){                       //increments every 24 hours
         dayCount++;
         timeReset = millis();
-        if(dayCount >= resetTriggerPeriod){
+        if(dayCount >= resetTriggerPeriod){                       //reset node if the period has been reached.
           digitalWrite(outEnPin, !digitalRead(outEnPin));
           delay(500);
           digitalWrite(outEnPin, !digitalRead(outEnPin));
@@ -259,15 +255,16 @@ void loop() {
   }
   digitalWrite(LEDPin, HIGH);
   digitalWrite(outEnPin, HIGH);
-  while(readSupplyVoltage() <= resumeVoltage){ //minimum voltage ahs triggered cutoff. waiting to hit resume voltage
+  while(readSupplyVoltage() <= resumeVoltage){                            //minimum voltage ahs triggered cutoff. waiting to hit resume voltage
     attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
-    sleep_mode();
-    if(digitalRead(buttonPin) == false){
+    sleep_mode();                                                         // enter standby sleep mode
+    if(digitalRead(buttonPin) == false){                                  //if woken by button press, enter menu
       configMenu();
     }
     digitalWrite(LEDPin, LOW);
     delay(10);
     digitalWrite(LEDPin, HIGH);
   }
-  detachInterrupt(digitalPinToInterrupt(buttonPin));
+  detachInterrupt(digitalPinToInterrupt(buttonPin));                      //disable pin interrupt when cutoff is disabled.
+  pinMode(buttonPin, INPUT_PULLUP);
 }
