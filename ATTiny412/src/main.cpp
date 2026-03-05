@@ -18,7 +18,7 @@ int flashDelay = 20;
 int shortBlinkDelay = 200;
 int longBlinkDelay = 500;
 
-int sleepDuration = 5;                                            //sleep duration in seconds between checks at low power
+int sleepDuration = 10;                                            //sleep duration in seconds between checks at low power
 int dayCount = 0;
 
 unsigned long timeIdle;
@@ -28,7 +28,7 @@ unsigned long timeReset;
 volatile unsigned long lastInteruptTrigger;
 
 int configValuesArray[5] = {0, 0, 0, 0, 0};
-int minimumVoltageArray[5] = {3000, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
+int minimumVoltageArray[5] = {3400, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
 int resumeVoltageArray[5] = {3600, 3300, 3700, 3900, 4100}; //minimum voltage to resume providing power to the node
 int resetTriggerPeriodArray[5] = {7, 0, 14, 28, 3}; //reset trigger period in days. 0 = OFF. aux1 pin output
 int maxTempCutoffArrray[5] = {60, 65, 50, 70, 0}; //min internal temp sensor value in Celsius to trigger cutoff. 0 = OFF
@@ -54,15 +54,15 @@ void buttonISR() {
   lastInteruptTrigger = millis();
 }
 
-void setSleep(){
+void setBlink(){
   cli();
   while (RTC.STATUS > 0) {} // Wait for all register to be synchronized
   // Set RTC period
   RTC.PER = sleepDuration;   // set period here in seconds based on 1024Hz RTC clock and prescaler /1024)
   RTC.CLKSEL = RTC_CLKSEL_INT1K_gc; // 32768 Hz divided by 32, i.e run at 1.024kHz
   //  Run in debug: enabled
-  RTC.DBGCTRL |= RTC_DBGRUN_bm;
-  RTC.CTRLA = RTC_PRESCALER_DIV512_gc /* 256 */ | RTC_RTCEN_bm /* Enable: enabled */ | RTC_RUNSTDBY_bm; /* Run In Standby: enabled */
+  // RTC.DBGCTRL |= RTC_DBGRUN_bm;
+  RTC.CTRLA = RTC_PRESCALER_DIV1024_gc /* 256 */ | RTC_RTCEN_bm /* Enable: enabled */ | RTC_RUNSTDBY_bm; /* Run In Standby: enabled */
   // Enable Overflow Interrupt
   RTC.INTCTRL |= RTC_OVF_bm;
   sei();
@@ -71,7 +71,7 @@ void setSleep(){
 
 uint16_t readSupplyVoltage() { // returns value in millivolts to avoid floating point
   analogReference(VDD);
-  VREF.CTRLA = VREF_ADC0REFSEL_1V5_gc;
+  VREF.CTRLA = VREF_ADC0REFSEL_1V1_gc;
   // there is a settling time between when reference is turned on, and when it becomes valid.
   // since the reference is normally turned on only when it is requested, this virtually guarantees
   // that the first reading will be garbage; subsequent readings taken immediately after will be fine.
@@ -80,7 +80,7 @@ uint16_t readSupplyVoltage() { // returns value in millivolts to avoid floating 
   uint16_t reading = analogRead(ADC_INTREF);
   delay(ADCSettleDelay);
   reading = analogRead(ADC_INTREF);
-  uint32_t intermediate = 1023UL * 1500;
+  uint32_t intermediate = 1023UL * 1100;
   reading = intermediate / reading;
   return reading;
 }
@@ -198,7 +198,7 @@ void setup() {
   digitalWrite(LEDPin, HIGH);
   pinMode(buttonPin, INPUT_PULLUP);
 
-  setSleep();
+  setBlink();
 }
 
 void loop() {
@@ -257,9 +257,9 @@ void loop() {
     }
     digitalWrite(LEDPin, !digitalRead(LEDPin));
   }
-
+  digitalWrite(LEDPin, HIGH);
+  digitalWrite(outEnPin, HIGH);
   while(readSupplyVoltage() <= resumeVoltage){ //minimum voltage ahs triggered cutoff. waiting to hit resume voltage
-    digitalWrite(outEnPin, HIGH);
     attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
     sleep_mode();
     if(digitalRead(buttonPin) == false){
