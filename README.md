@@ -20,7 +20,7 @@ ok I think I have the firmware for the cutoff boards finished now.
 
 # Config menu options
 | Long Flash \ Short Flash|1 (default)|2|3|4|5|
-|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
+|:-------------|:-------------:|:-------------:|:-------------:|:-------------:|:-------------:|
 |1: Cutoff Voltage|3000|2900|3100|2800|3200|
 |2: Resume Voltage|3600|3300|3700|3900|4100|
 |3: Days Between Reset|7|0|14|28|3|
