@@ -212,30 +212,7 @@ void loop() {
     if(digitalRead(buttonPin) == false){                       //enter menu if button is pressed.
       configMenu();
     }
-    if(IdleReset != 0){                                         //check if idle reset is enabled. 
-      if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
-        timeIdle = millis();
-      }else{
-        if(IdleReset < 0){                                     //if the value is negative, reset the board if the pinstate HAS changed.
-          while(millis() - timeIdle <= (IdleReset * -1000)){
-            attachInterrupt(digitalPinToInterrupt(sensePin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
-            sleep_mode();                                                         // enter standby sleep mode
-            detachInterrupt(digitalPinToInterrupt(sensePin));
-            pinMode(sensePin, INPUT_PULLUP);
-            if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
-              timeIdle = millis();
-            }
-          }
-        }else{
-          if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has NOT changed in the given period.
-            digitalWrite(outEnPin, !digitalRead(outEnPin));
-            delay(500);
-            digitalWrite(outEnPin, !digitalRead(outEnPin));
-            timeIdle = millis();
-          }
-        }
-      }
-    }
+    
     if(resetTriggerPeriod != 0){
       if(millis() - timeReset >= 86400000){                       //increments every 24 hours
         dayCount++;
@@ -245,6 +222,31 @@ void loop() {
           delay(500);
           digitalWrite(outEnPin, !digitalRead(outEnPin));
           dayCount = 0;
+        }
+      }
+    }
+    if(IdleReset != 0){                                         //check if idle reset is enabled. 
+      if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+        timeIdle = millis();
+      }else{
+        if(IdleReset > 0){                                     //if the value is negative, reset the board if the pinstate HAS changed.
+          if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has NOT changed in the given period.
+            digitalWrite(outEnPin, !digitalRead(outEnPin));
+            delay(500);
+            digitalWrite(outEnPin, !digitalRead(outEnPin));
+            timeIdle = millis();
+          }
+        }else{
+          while(millis() - timeIdle <= (IdleReset * -1000)){          // ONLY USE NEGATIVE VALUES FOR EXTERNAL TRIGGERS
+            digitalWrite(outEnPin, HIGH);
+            attachInterrupt(digitalPinToInterrupt(sensePin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
+            sleep_mode();                                                         // enter standby sleep mode
+            detachInterrupt(digitalPinToInterrupt(sensePin));
+            pinMode(sensePin, INPUT_PULLUP);
+            if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+              timeIdle = millis();
+            }
+          }
         }
       }
     }
