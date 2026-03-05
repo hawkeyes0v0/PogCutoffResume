@@ -45,10 +45,7 @@ ISR(RTC_CNT_vect)
   RTC.INTFLAGS = RTC_OVF_bm;
 }
 
-void buttonISR() {
-  detachInterrupt(digitalPinToInterrupt(buttonPin));
-  pinMode(buttonPin, INPUT_PULLUP);
-}
+void buttonISR() {} //only used to wake from sleep
 
 void setBlink(){
   cli();
@@ -212,21 +209,22 @@ void loop() {
         delay(longBlinkDelay);
       }
     }
-
     if(digitalRead(buttonPin) == false){                       //enter menu if button is pressed.
       configMenu();
     }
-
     if(IdleReset != 0){                                         //check if idle reset is enabled. 
-      if(!digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+      if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
         timeIdle = millis();
       }else{
         if(IdleReset < 0){                                     //if the value is negative, reset the board if the pinstate HAS changed.
-          if(millis() - timeIdle <= (IdleReset * -1000)){
-            digitalWrite(outEnPin, !digitalRead(outEnPin));
-            delay(500);
-            digitalWrite(outEnPin, !digitalRead(outEnPin));
-            timeIdle = millis();
+          while(millis() - timeIdle <= (IdleReset * -1000)){
+            attachInterrupt(digitalPinToInterrupt(sensePin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
+            sleep_mode();                                                         // enter standby sleep mode
+            detachInterrupt(digitalPinToInterrupt(sensePin));
+            pinMode(sensePin, INPUT_PULLUP);
+            if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+              timeIdle = millis();
+            }
           }
         }else{
           if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has NOT changed in the given period.
@@ -238,7 +236,6 @@ void loop() {
         }
       }
     }
-
     if(resetTriggerPeriod != 0){
       if(millis() - timeReset >= 86400000){                       //increments every 24 hours
         dayCount++;
@@ -258,6 +255,8 @@ void loop() {
   while(readSupplyVoltage() <= resumeVoltage){                            //minimum voltage ahs triggered cutoff. waiting to hit resume voltage
     attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
     sleep_mode();                                                         // enter standby sleep mode
+    detachInterrupt(digitalPinToInterrupt(buttonPin));
+    pinMode(buttonPin, INPUT_PULLUP);
     if(digitalRead(buttonPin) == false){                                  //if woken by button press, enter menu
       configMenu();
     }
