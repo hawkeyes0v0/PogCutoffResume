@@ -29,3 +29,16 @@ int resetTriggerPeriodArray[5] = {7, 0, 14, 28, 3}; //reset trigger period in da
 int maxTempCutoffArrray[5] = {60, 65, 50, 70, 0}; //min internal temp sensor value in Celsius to trigger cutoff. 0 = OFF
 
 int IdleResetArray[5] = {0, 30, 60, -600, -1800}; //duration between pin status change on aux2 in seconds. reset positive, cutoff negative. 0 = OFF. aux1 pin output
+
+
+![alt text](https://github.com/hawkeyes0v0/PogCutoffResume/blob/main/PCB/412a.png)
+
+![alt text](https://github.com/hawkeyes0v0/PogCutoffResume/blob/main/PCB/412b.png)
+
+![alt text](https://github.com/hawkeyes0v0/PogCutoffResume/blob/main/PCB/Screenshot%202026-03-04%20233930.png)
+
+![alt text](https://github.com/hawkeyes0v0/PogCutoffResume/blob/main/PCB/Screenshot%202026-03-04%20234356.png)
+
+![alt text](https://github.com/hawkeyes0v0/PogCutoffResume/blob/main/PCB/Screenshot%202026-03-04%20234455.png)
+
+![alt text](https://github.com/hawkeyes0v0/PogCutoffResume/blob/main/PCB/e605dbf2ea734236a26d63ae861d4c91_T.png)
