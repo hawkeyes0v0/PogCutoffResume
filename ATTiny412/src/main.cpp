@@ -5,7 +5,7 @@
 
 const uint8_t updiPin = PIN_PA0;
 
-const uint8_t heartbeatPin = PIN_PA6;
+const uint8_t LEDPin = PIN_PA6;
 const uint8_t buttonPin = PIN_PA7;
 const uint8_t outEnPin = PIN_PA2;
 
@@ -87,60 +87,60 @@ uint16_t readSupplyVoltage() { // returns value in millivolts to avoid floating 
 
 int readTemp() {
   // based on the datasheet, in section 30.3.2.5 Temperature Measurement
-  int8_t sigrow_offset = SIGROW.TEMPSENSE1; // Read signed value from signature row
-  uint8_t sigrow_gain = SIGROW.TEMPSENSE0; // Read unsigned value from signature row
+  int8_t sigrow_offset = SIGROW.TEMPSENSE1;                           // Read signed value from signature row
+  uint8_t sigrow_gain = SIGROW.TEMPSENSE0;                            // Read unsigned value from signature row
   analogReference(INTERNAL1V1);
-  ADC0.SAMPCTRL = 0x1F; // maximum length sampling
+  ADC0.SAMPCTRL = 0x1F;                                               // maximum length sampling
   ADC0.CTRLD &= ~(ADC_INITDLY_gm);
-  ADC0.CTRLD |= ADC_INITDLY_DLY32_gc; // wait 32 ADC clocks before reading new reference
-  uint16_t adc_reading = analogRead(ADC_TEMPERATURE); // ADC conversion result with 1.1 V internal reference
+  ADC0.CTRLD |= ADC_INITDLY_DLY32_gc;                                 // wait 32 ADC clocks before reading new reference
+  uint16_t adc_reading = analogRead(ADC_TEMPERATURE);                 // ADC conversion result with 1.1 V internal reference
   analogReference(VDD);
-  ADC0.SAMPCTRL = 0x0E; // 14, what we now set it to automatically on startup so we can run the ADC while keeping the same sampling time
+  ADC0.SAMPCTRL = 0x0E;                          // 14, what we now set it to automatically on startup so we can run the ADC while keeping the same sampling time
   ADC0.CTRLD &= ~(ADC_INITDLY_gm);
   ADC0.CTRLD |= ADC_INITDLY_DLY16_gc;
   uint32_t temp = adc_reading - sigrow_offset;
-  temp *= sigrow_gain; // Result might overflow 16 bit variable (10bit+8bit)
-  temp += 0x80; // Add 1/2 to get correct rounding on division below
-  temp >>= 8; // Divide result to get Kelvin
-  temp -= 273; // subtract 273 for Celsius
+  temp *= sigrow_gain;                                                // Result might overflow 16 bit variable (10bit+8bit)
+  temp += 0x80;                                                       // Add 1/2 to get correct rounding on division below
+  temp >>= 8;                                                         // Divide result to get Kelvin
+  temp -= 273;                                                        // subtract 273 for Celsius
   return temp;
 }
 
-void menuDisplay(int menuOptionTemp) {
+void menuDisplay(int menuOptionTemp) {                                //shows the current menu selection and the value position in the array.
   delay(500);
   for ( int i = 0; i <= menuOptionTemp; i++ ) {
-    digitalWrite(heartbeatPin, LOW);
+    digitalWrite(LEDPin, LOW);
     delay(shortBlinkDelay);
-    digitalWrite(heartbeatPin, HIGH);
+    digitalWrite(LEDPin, HIGH);
     delay(shortBlinkDelay);
   }
   delay(shortBlinkDelay);
   for ( int i = 0; i <= configValuesArray[menuOptionTemp]; i++ ) {
-    digitalWrite(heartbeatPin, LOW);
+    digitalWrite(LEDPin, LOW);
     delay(flashDelay);
-    digitalWrite(heartbeatPin, HIGH);
+    digitalWrite(LEDPin, HIGH);
     delay(shortBlinkDelay);
   }
 }
 
 void configMenu() {
-  while(digitalRead(buttonPin) == false){digitalWrite(heartbeatPin, LOW);}
-  digitalWrite(heartbeatPin, HIGH);
+  while(digitalRead(buttonPin) == false){digitalWrite(LEDPin, LOW);}
+  digitalWrite(LEDPin, HIGH);
   unsigned long configStart = millis();
   unsigned long buttonTime = 0;
   int buttonPressed = 0;
   int menuOption = 0;
   int configValuesArrayCount = sizeof(configValuesArray) / sizeof(configValuesArray[0]);
   menuDisplay(menuOption);
-  while(menuOption < configValuesArrayCount && millis() - configStart < 30000){
+  while(menuOption < configValuesArrayCount && millis() - configStart < 30000){ //exit menu if 30s has passed without a button press or if cycled past the last menu option
     buttonTime = 0;
     buttonPressed = 0;
-    while(buttonPressed == 0){
+    while(buttonPressed == 0 && millis() - configStart < 30000){
       if(digitalRead(buttonPin) == false){
         unsigned long buttonStart = millis();
-        digitalWrite(heartbeatPin, LOW);
+        digitalWrite(LEDPin, LOW);
         while(digitalRead(buttonPin) == false){}
-        digitalWrite(heartbeatPin, HIGH);
+        digitalWrite(LEDPin, HIGH);
         buttonTime = millis() - buttonStart;
         if(buttonTime >= 100){
           buttonPressed = 1;
@@ -188,31 +188,15 @@ void configMenu() {
 }
 
 void setup() {
-  // Serial.begin(57600);
   // force all pins to non-floating state
   for ( int i = 0; i <= 4; i++ ) {
     pinMode( i, INPUT_PULLUP ) ;
   }
   pinMode(outEnPin, OUTPUT);
   digitalWrite(outEnPin, HIGH);
-  pinMode(auxPin1, OUTPUT);
-  digitalWrite(auxPin1, HIGH);
-  pinMode(heartbeatPin, OUTPUT);
-  digitalWrite(heartbeatPin, HIGH);
+  pinMode(LEDPin, OUTPUT);
+  digitalWrite(LEDPin, HIGH);
   pinMode(buttonPin, INPUT_PULLUP);
-
-  // // test internal temp sensor. its not super accurate, but good enough for our purposes.
-  // int16_t tempReading = readTempExplained();
-  // // Serial.print("System temperature is: ");
-  // // Serial.print(tempReading - 273);
-  // // Serial.print("C (");
-  // int celsius = tempReading - 273;
-  // for ( int i = 0; i < celsius; i++ ) {
-  //   digitalWrite(heartbeatPin, LOW) ;
-  //   delay(100) ;
-  //   digitalWrite(heartbeatPin, HIGH) ;
-  //   delay(200) ;
-  // }
 
   setSleep();
 }
@@ -226,9 +210,9 @@ void loop() {
     }else{
       digitalWrite(outEnPin, HIGH);
       while(readTemp() > maxTempCutoff){
-        digitalWrite(heartbeatPin, LOW);
+        digitalWrite(LEDPin, LOW);
         delay(longBlinkDelay);
-        digitalWrite(heartbeatPin, HIGH);
+        digitalWrite(LEDPin, HIGH);
         delay(longBlinkDelay);
       }
     }
@@ -243,18 +227,16 @@ void loop() {
       }else{
         if(IdleReset < 0){
           if(millis() - timeIdle <= (IdleReset * -1000)){
-            pinMode(auxPin1, OUTPUT);
-            digitalWrite(auxPin1, LOW);
+            digitalWrite(outEnPin, !digitalRead(outEnPin));
             delay(500);
-            pinMode(auxPin1, INPUT_PULLUP);
+            digitalWrite(outEnPin, !digitalRead(outEnPin));
             timeIdle = millis();
           }
         }else{
           if(millis() - timeIdle >= (IdleReset * 1000)){
-            pinMode(auxPin1, OUTPUT);
-            digitalWrite(auxPin1, LOW);
+            digitalWrite(outEnPin, !digitalRead(outEnPin));
             delay(500);
-            pinMode(auxPin1, INPUT_PULLUP);
+            digitalWrite(outEnPin, !digitalRead(outEnPin));
             timeIdle = millis();
           }
         }
@@ -266,25 +248,26 @@ void loop() {
         dayCount++;
         timeReset = millis();
         if(dayCount >= resetTriggerPeriod){
-          pinMode(auxPin1, OUTPUT);
-          digitalWrite(auxPin1, LOW);
+          digitalWrite(outEnPin, !digitalRead(outEnPin));
           delay(500);
-          pinMode(auxPin1, INPUT_PULLUP);
+          digitalWrite(outEnPin, !digitalRead(outEnPin));
           dayCount = 0;
         }
       }
     }
+    digitalWrite(LEDPin, !digitalRead(LEDPin));
   }
 
   while(readSupplyVoltage() <= resumeVoltage){ //minimum voltage ahs triggered cutoff. waiting to hit resume voltage
-    digitalWrite(heartbeatPin, LOW);
-    delay(flashDelay);
-    digitalWrite(heartbeatPin, HIGH);
+    digitalWrite(outEnPin, HIGH);
     attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
     sleep_mode();
     if(digitalRead(buttonPin) == false){
       configMenu();
     }
+    digitalWrite(LEDPin, LOW);
+    delay(10);
+    digitalWrite(LEDPin, HIGH);
   }
   detachInterrupt(digitalPinToInterrupt(buttonPin));
 }
