@@ -10,6 +10,19 @@ ok I think I have the firmware for the cutoff boards finished now.
 - periodic reset trigger on aux1 pin
 - idle reset trigger on aux1 pin and listen for pinstate change on aux2 pin
 
+# Testing Info:
+So I really havent had time to do extensive testing, but I have tested the below:
+
+- Temperature cutoff works when i point a hair dryer at it. I did not check how accurate the sensor is, but it shows 20C when at room temp, so thats good enough for me.
+- Voltage cutoff is quick enough that the tiny little capacitor on VCC has enough power left to run the MCU for about a minute after cutoff.
+- Resume voltage works.
+- Idle timeout reset positive values work. havent tried negative values... dont have something to test it reliably right now.
+- Periodic reset tested at 1000th scaled counters. works as far as i can see... 
+- Voltage accuracy is to within a few mV (the voltage supply is not granular enough to test super accurately).
+- Power consumption is about 1uA average when in cutoff mode. good enough. Under 2mA during normal operation.
+- Menu enter, set, save, exit. All works, but sometimes the values stick during cutoff and are not applied until resume voltage is reached. I have no idea why yet.
+- Output power is cut and resumed successfully in each scenario.
+
 # To use the configuration menu:
 - One button press to enter
 - when the button is released, the menu item and value in their array position are shown as long and short flashes.
