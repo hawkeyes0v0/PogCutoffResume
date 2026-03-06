@@ -5,10 +5,11 @@ ok I think I have the firmware for the cutoff boards finished now.
 
 # Properties:
 - 1.8-5.5V operating voltage
+- 2A max continuous current
 - -40-105C temperature range
 - 20x20mm board, holes centered at 15x15mm
-- Source power on VIN, node battery input on VOUT
-- 2mA during normal operation, 1uA during cutoff
+- Source battery on VIN, node on VOUT
+- <2mA during normal operation, 1uA during cutoff
 - operating frequency: 1MHz
 - VCC sampling frequency during normal operation: 300Hz (approximately)
 - VCC sampling every 10 seconds during cutoff
