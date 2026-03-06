@@ -161,7 +161,7 @@ void configMenu() {
     }
   }
 
-  if(configValuesArray[6] == 4){
+  if(configValuesArray[5] == 1){
     for(int i = 0; i < configValuesArrayCount; i++){
       configValuesArray[i] = 0;
     }
@@ -218,6 +218,7 @@ void loop() {
         dayCount++;
         timeReset = millis();
         if(dayCount >= resetTriggerPeriod){                       //reset node if the period has been reached.
+          digitalWrite(LEDPin, HIGH);
           digitalWrite(outEnPin, !digitalRead(outEnPin));
           delay(500);
           digitalWrite(outEnPin, !digitalRead(outEnPin));
@@ -226,11 +227,12 @@ void loop() {
       }
     }
     if(IdleReset != 0){                                         //check if idle reset is enabled. 
-      if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+      if(!digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
         timeIdle = millis();
       }else{
         if(IdleReset > 0){                                     //if the value is negative, reset the board if the pinstate HAS changed.
           if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has NOT changed in the given period.
+            digitalWrite(LEDPin, HIGH);
             digitalWrite(outEnPin, !digitalRead(outEnPin));
             delay(500);
             digitalWrite(outEnPin, !digitalRead(outEnPin));
@@ -238,6 +240,7 @@ void loop() {
           }
         }else{
           while(millis() - timeIdle <= (IdleReset * -1000)){          // ONLY USE NEGATIVE VALUES FOR EXTERNAL TRIGGERS
+            digitalWrite(LEDPin, HIGH);
             digitalWrite(outEnPin, HIGH);
             attachInterrupt(digitalPinToInterrupt(sensePin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
             sleep_mode();                                                         // enter standby sleep mode
