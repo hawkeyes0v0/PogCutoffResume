@@ -16,7 +16,7 @@ ok I think I have the firmware for the cutoff boards finished now.
 - short press (< 1s) changes config value
 - Long press (1s to 5s) changes the config item
 - Longer press (5s or more) exits the config menu
-- 30second timeout if button is not pressed again
+- 30second timeout if button is not pressed
 
 # Config menu options
 | Long Flash \ Short Flash|1 (default)|2|3|4|5|
