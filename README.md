@@ -3,12 +3,13 @@ Attiny412 low voltage cutoff, delayed resume
 
 ok I think I have the firmware for the cutoff boards finished now.
 
-# Functions are:
+# Functions:
 - cutoff at minimum voltage
 - resume at resume voltage
 - max temperature cutoff (could flipflop a bit since theres no hysteresis, but you have bigger things to worry about at this point)
-- periodic reset trigger on aux1 pin
-- idle reset trigger on aux1 pin and listen for pinstate change on aux2 pin
+- periodic reset
+- idle reset, listen for pinstate change on aux2 pin
+- single button menu to configure the board during runtime
 
 # Testing Info:
 So I really havent had time to do extensive testing, but I have tested the below:
@@ -41,7 +42,8 @@ So I really havent had time to do extensive testing, but I have tested the below
 |5: Idle Time Reset|0|30|60|-600*|-1800*|
 
 *reset on positive values, cutoff on negative values 
-# Arrays used to store config values:
+
+Arrays used to store config values:
 
 int minimumVoltageArray[5] = {3000, 2900, 3100, 2800, 3200}; //minimum voltage to trigger cuttoff
 
