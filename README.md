@@ -13,6 +13,7 @@ ok I think I have the firmware for the cutoff boards finished now.
 - operating frequency: 1MHz
 - VCC sampling frequency during normal operation: 300Hz (approximately)
 - VCC sampling every 10 seconds during cutoff
+- MCU flash space used: 4029/4096 Bytes (could be optimized significantly)
 
 # Functions:
 - cutoff at minimum voltage
