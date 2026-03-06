@@ -40,6 +40,7 @@ So I really havent had time to do extensive testing, but I have tested the below
 |3: Days Between Reset|7|0|14|28|3|
 |4: Max Temperature Cutoff|60|65|50|70|0|
 |5: Idle Time Reset|0|30|60|-600*|-1800*|
+|6: Set Config to Defaults|0|0|0|0|1|
 
 *reset on positive values, cutoff on negative values 
 
