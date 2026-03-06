@@ -227,11 +227,11 @@ void loop() {
       }
     }
     if(IdleReset != 0){                                         //check if idle reset is enabled. 
-      if(!digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+      if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to HIGH.
         timeIdle = millis();
       }else{
-        if(IdleReset > 0){                                     //if the value is negative, reset the board if the pinstate HAS changed.
-          if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has NOT changed in the given period.
+        if(IdleReset > 0){
+          if(millis() - timeIdle >= (IdleReset * 1000)){       //reset the board if the pin state has not changed in the given period.
             digitalWrite(LEDPin, HIGH);
             digitalWrite(outEnPin, !digitalRead(outEnPin));
             delay(500);
@@ -239,16 +239,18 @@ void loop() {
             timeIdle = millis();
           }
         }else{
-          while(millis() - timeIdle <= (IdleReset * -1000)){          // ONLY USE NEGATIVE VALUES FOR EXTERNAL TRIGGERS
+          while(millis() - timeIdle >= (IdleReset * -1000)){          // Negative values cause node to go into cutoff mode and sleep until pin change is detected
             digitalWrite(LEDPin, HIGH);
             digitalWrite(outEnPin, HIGH);
             attachInterrupt(digitalPinToInterrupt(sensePin), buttonISR, CHANGE); // Attach interrupt on falling edge (button press to GND)
             sleep_mode();                                                         // enter standby sleep mode
             detachInterrupt(digitalPinToInterrupt(sensePin));
             pinMode(sensePin, INPUT_PULLUP);
-            if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to LOW.
+            if(digitalRead(sensePin)){                                //check aux2 pin many times a second to see if pin state has changed to HIGH.
               timeIdle = millis();
             }
+            digitalWrite(LEDPin, LOW);
+            delay(10);
           }
         }
       }
