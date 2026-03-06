@@ -161,7 +161,7 @@ void configMenu() {
     }
   }
 
-  if(configValuesArray[5] == 1){
+  if(configValuesArray[5] == 4){
     for(int i = 0; i < configValuesArrayCount; i++){
       configValuesArray[i] = 0;
     }
