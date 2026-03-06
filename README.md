@@ -31,6 +31,7 @@ So I really havent had time to do extensive testing, but I have tested the below
 - Long press (1s to 5s) changes the config item
 - Longer press (5s or more) exits the config menu
 - 30second timeout if button is not pressed
+- reset all configs to defaults by using the 6th menu option with a value of 5
 
 # Config menu options
 | Long Flash \ Short Flash|1 (default)|2|3|4|5|
