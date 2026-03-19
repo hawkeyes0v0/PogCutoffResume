@@ -271,6 +271,4 @@ void loop() {
     delay(10);
     digitalWrite(LEDPin, HIGH);
   }
-  detachInterrupt(digitalPinToInterrupt(buttonPin));                      //disable pin interrupt when cutoff is disabled.
-  pinMode(buttonPin, INPUT_PULLUP);
 }
