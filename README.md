@@ -13,6 +13,7 @@ ok I think I have the firmware for the cutoff boards finished now.
 - operating frequency: 1MHz
 - VCC sampling frequency during normal operation: 100Hz (approximately)
 - VCC sampling every 10 seconds during cutoff
+- Charging the battery via USB from the node-side works even with the cutoff board between the battery and node
 
 # Functions:
 - cutoff at minimum voltage
